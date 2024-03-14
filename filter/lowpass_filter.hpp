@@ -7,7 +7,7 @@ namespace hca {
 
 class LowpassFilter : public FilterInterface{
 private:
-    float ratio;
+    float ratio; //! buffer値に対する新規入力値の重視割合
 public:
     LowpassFilter();
     void init(float ratio);
