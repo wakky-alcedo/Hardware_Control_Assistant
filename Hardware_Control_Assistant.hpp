@@ -4,5 +4,6 @@
 #include "util/all.hpp"
 #include "filter/all.hpp"
 #include "output/all.hpp"
+#include "button/all.hpp"
 
 #endif /* HARDWARE_CONTROL_ASSISTANT_HPP_ */
