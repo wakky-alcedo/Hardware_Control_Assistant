@@ -101,10 +101,12 @@ private:
 	T raw_x;
 	T raw_y;
 	bool calibrated_flag; // キャリブレーション状態を保持
+	double deadzone_radius; // 不感帯の半径
 
 public:
 	Joystick() : x_offset(static_cast<T>(0)), y_offset(static_cast<T>(0)), 
-	             raw_x(static_cast<T>(0)), raw_y(static_cast<T>(0)), calibrated_flag(false) {
+	             raw_x(static_cast<T>(0)), raw_y(static_cast<T>(0)), calibrated_flag(false),
+	             deadzone_radius(0.0) {
 		// Initialize all values to zero and not calibrated
 	}
 	
@@ -158,7 +160,51 @@ public:
 		this->raw_y = pos.y;
 	}
 	
-	// Output methods (with offset applied)
+	// Deadzone methods
+	void set_deadzone_radius(double radius) {
+		this->deadzone_radius = (radius >= 0.0) ? radius : 0.0;
+	}
+	
+	double get_deadzone_radius() const {
+		return this->deadzone_radius;
+	}
+	
+	void reset_deadzone() {
+		this->deadzone_radius = 0.0;
+	}
+	
+	// Check if current position is within deadzone
+	bool is_in_deadzone() const {
+		return get_magnitude() <= this->deadzone_radius;
+	}
+	
+	// Apply deadzone to position (returns zero position if within deadzone)
+	Position<T> apply_deadzone(const Position<T>& pos) const {
+		double magnitude = pos.get_magnitude();
+		if (magnitude <= this->deadzone_radius) {
+			return Position<T>(static_cast<T>(0), static_cast<T>(0));
+		}
+		return pos;
+	}
+	
+	// Apply deadzone with scaling (scales from deadzone edge to full range)
+	Position<T> apply_deadzone_scaled(const Position<T>& pos) const {
+		double magnitude = pos.get_magnitude();
+		if (magnitude <= this->deadzone_radius) {
+			return Position<T>(static_cast<T>(0), static_cast<T>(0));
+		}
+		
+		// Scale the magnitude from deadzone edge to full range
+		double angle = pos.get_angle_radians();
+		double scaled_magnitude = (magnitude - this->deadzone_radius);
+		
+		return Position<T>(
+			static_cast<T>(scaled_magnitude * std::cos(angle)),
+			static_cast<T>(scaled_magnitude * std::sin(angle))
+		);
+	}
+	
+	// Output methods (with offset and optional deadzone applied)
 	T get_x() const {
 		return this->raw_x - this->x_offset;
 	}
@@ -168,24 +214,38 @@ public:
 	}
 	
 	Position<T> get_position() const {
+		Position<T> pos(this->raw_x - this->x_offset, this->raw_y - this->y_offset);
+		return apply_deadzone(pos);
+	}
+	
+	// Get position without deadzone applied
+	Position<T> get_position_raw_offset() const {
 		return Position<T>(this->raw_x - this->x_offset, this->raw_y - this->y_offset);
 	}
 	
-	// Polar coordinate methods (with offset applied)
+	// Get position with scaled deadzone applied
+	Position<T> get_position_scaled() const {
+		Position<T> pos(this->raw_x - this->x_offset, this->raw_y - this->y_offset);
+		return apply_deadzone_scaled(pos);
+	}
+	
+	// Polar coordinate methods (with offset and deadzone applied)
 	PolarCoordinate<T> get_polar_coordinate() const {
 		return PolarCoordinate<T>(get_position());
+	}
+	
+	// Get polar coordinate with scaled deadzone
+	PolarCoordinate<T> get_polar_coordinate_scaled() const {
+		return PolarCoordinate<T>(get_position_scaled());
 	}
 	
 	double get_magnitude() const {
 		return get_position().get_magnitude();
 	}
 	
-	double get_angle_radians() const {
-		return get_position().get_angle_radians();
-	}
-	
-	double get_angle_degrees() const {
-		return get_position().get_angle_degrees();
+	// Get magnitude with scaled deadzone
+	double get_magnitude_scaled() const {
+		return get_position_scaled().get_magnitude();
 	}
 	
 	// Raw values (without offset)
