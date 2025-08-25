@@ -2,6 +2,7 @@
 #define JOYSTICK_HPP_
 
 #include <cmath>
+#include <cstdint>
 
 namespace hca {
 
