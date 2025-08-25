@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <valarray>
+#include <limits>
 #include "filter_interface.hpp"
 
 namespace hca {
