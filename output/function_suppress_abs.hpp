@@ -1,6 +1,8 @@
 #ifndef HCA_OUTPUT_FUNCTION_SUPPRESS_ABS_HPP_
 #define HCA_OUTPUT_FUNCTION_SUPPRESS_ABS_HPP_
 
+#include <cmath>
+
 namespace hca {
 
 /**
